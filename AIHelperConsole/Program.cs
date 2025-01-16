@@ -13,6 +13,12 @@ class Program
         Console.Write("Enter your OpenAI API Key: ");
         var apiKey = Console.ReadLine();
 
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            Console.WriteLine("API Key cannot be null or empty. Exiting...");
+            return;
+        }
+
         // Set up configuration
         var config = new AIExtensionHelperConfiguration
         {
@@ -29,13 +35,8 @@ class Program
 
         while (true)
         {
-            Console.WriteLine("\n--- Main Menu ---");
-            Console.WriteLine("Choose an option to test:");
-            Console.WriteLine("1. Custom Prompt: Directly input your own prompt for the AI.");
-            Console.WriteLine("2. Predefined Prompt: Summarize a piece of text.");
-            Console.WriteLine("3. Dynamic Prompt: Create and test your own reusable prompt.");
-            Console.WriteLine("4. Exit: Quit the program.");
-            Console.Write("Enter your choice (1-4): ");
+            DisplayMenu();
+
             var choice = Console.ReadLine();
 
             if (choice == "4")
@@ -44,74 +45,94 @@ class Program
                 break;
             }
 
+            await HandleUserChoice(choice, client);
+        }
+    }
+
+    private static void DisplayMenu()
+    {
+        Console.WriteLine("\n--- Main Menu ---");
+        Console.WriteLine("Choose an option to test:");
+        Console.WriteLine("1. Custom Prompt: Directly input your own prompt for the AI.");
+        Console.WriteLine("2. Predefined Prompt: Summarize a piece of text.");
+        Console.WriteLine("3. Dynamic Prompt: Create and test your own reusable prompt.");
+        Console.WriteLine("4. Exit: Quit the program.");
+        Console.Write("Enter your choice (1-4): ");
+    }
+
+    private static async Task HandleUserChoice(string choice, OpenAIClient client)
+    {
+        try
+        {
             switch (choice)
             {
                 case "1":
                     await TestCustomPrompt(client);
                     break;
-
                 case "2":
                     await TestPredefinedPrompt(client);
                     break;
-
                 case "3":
                     await TestDynamicPrompt(client);
                     break;
-
                 default:
                     Console.WriteLine("Invalid choice. Please enter a number between 1 and 4.");
                     break;
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
 
     private static async Task TestCustomPrompt(OpenAIClient client)
     {
         Console.WriteLine("\n--- Custom Prompt Test ---");
-        Console.WriteLine("This option allows you to send a freeform prompt to the AI.");
         Console.Write("Enter your custom prompt (e.g., 'Explain the benefits of using AI in education'): ");
         var prompt = Console.ReadLine();
 
-        try
+        if (string.IsNullOrWhiteSpace(prompt))
         {
-            var result = await client.GenerateTextAsync(prompt);
-            Console.WriteLine("\n--- AI Response ---");
-            Console.WriteLine(result);
+            Console.WriteLine("Prompt cannot be null or empty.");
+            return;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+
+        var result = await client.GenerateTextAsync(prompt);
+        Console.WriteLine("\n--- AI Response ---");
+        Console.WriteLine(result);
     }
 
     private static async Task TestPredefinedPrompt(OpenAIClient client)
     {
         Console.WriteLine("\n--- Predefined Prompt Test: Summarization ---");
-        Console.WriteLine("This option summarizes a piece of text for you.");
-        Console.WriteLine("For example, you might input a paragraph, and the AI will return a concise summary.");
         Console.Write("Enter the text you want to summarize: ");
         var userInput = Console.ReadLine();
 
-        try
+        if (string.IsNullOrWhiteSpace(userInput))
         {
-            var result = await client.GenerateTextWithPredefinedPromptAsync(PromptManager.Summarize, userInput);
-            Console.WriteLine("\n--- AI Response ---");
-            Console.WriteLine(result);
+            Console.WriteLine("Input text cannot be null or empty.");
+            return;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+
+    var result = await client.GenerateTextWithPredefinedPromptAsync(PromptManager.GetPrompt(PromptType.Summarize), userInput);
+        Console.WriteLine("\n--- AI Response ---");
+        Console.WriteLine(result);
     }
 
     private static async Task TestDynamicPrompt(OpenAIClient client)
     {
         Console.WriteLine("\n--- Dynamic Prompt Test ---");
-        Console.WriteLine("This option lets you create your own prompt template that can be reused.");
         Console.Write("Enter a key (name) for your dynamic prompt (e.g., 'Greeting'): ");
         var key = Console.ReadLine();
         Console.Write("Enter the content of your dynamic prompt (e.g., 'Greet the user warmly and enthusiastically'): ");
         var dynamicPromptContent = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(dynamicPromptContent))
+        {
+            Console.WriteLine("Key and dynamic prompt content cannot be null or empty.");
+            return;
+        }
 
         var promptManager = new DynamicPromptManager();
         promptManager.AddPrompt(key, dynamicPromptContent);
@@ -119,15 +140,14 @@ class Program
         Console.Write("Enter the input for your dynamic prompt (e.g., 'Hello'): ");
         var userInput = Console.ReadLine();
 
-        try
+        if (string.IsNullOrWhiteSpace(userInput))
         {
-            var result = await client.GenerateTextWithDynamicPromptAsync(promptManager, key, userInput);
-            Console.WriteLine("\n--- AI Response ---");
-            Console.WriteLine(result);
+            Console.WriteLine("User input cannot be null or empty.");
+            return;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+
+        var result = await client.GenerateTextWithDynamicPromptAsync(promptManager, key, userInput);
+        Console.WriteLine("\n--- AI Response ---");
+        Console.WriteLine(result);
     }
 }

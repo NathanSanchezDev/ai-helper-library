@@ -122,6 +122,11 @@ namespace AIHelperLibrary.Services
 
             _chatHistories[instanceKey].Add(new { role = "user", content = userMessage });
 
+            if (_chatHistories[instanceKey].Count > _config.MaxChatHistorySize)
+            {
+                _chatHistories[instanceKey].RemoveAt(0);
+            }
+
             var requestBody = new
             {
                 model = GetModelString(),

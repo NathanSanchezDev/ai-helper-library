@@ -14,6 +14,7 @@ This documentation serves as a comprehensive guide to understanding, configuring
    - Manages communication with OpenAI's API endpoints.
    - Configurable support for models such as `GPT-3.5-Turbo` and `GPT-4`.
    - Single-turn and multi-turn conversations with retained context.
+   - Automatically manages chat history with configurable limits.
 
 2. **Prompt Management**
    - **Predefined Prompts**: Use built-in templates for tasks like summarization or Q&A.
@@ -78,6 +79,7 @@ var config = new AIExtensionHelperConfiguration
     TopP = 1.0,
     RequestTimeoutMs = 10000,
     EnableLogging = true
+    MaxChatHistorySize = 10
 };
 
 var client = new OpenAIClient("your-api-key", config);

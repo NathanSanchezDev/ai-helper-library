@@ -27,5 +27,8 @@ namespace AIHelperLibrary.Configurations
 
         // Custom behavior flags or settings can go here
         public bool EnableLogging { get; set; } = false;
+
+        // Chat history limits
+        public int MaxChatHistorySize { get; set; } = 20; // Default: 20 messages
     }
 }

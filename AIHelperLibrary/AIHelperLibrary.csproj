@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>AIHelperLibrary</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Nathan Sanchez</Authors>
     <TargetFramework>net8.0</TargetFramework>
+    <Description>A modular library for interacting with OpenAI's API.</Description>
+    <RepositoryUrl>https://github.com/NathanSanchezDev/ai-helper-library</RepositoryUrl>
+    <PackageTags>AI OpenAI GPT C#</PackageTags>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

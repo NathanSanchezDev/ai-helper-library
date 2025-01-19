@@ -1,31 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using AIHelperLibrary.Configurations;
 using AIHelperLibrary.Models;
 using AIHelperLibrary.Prompts;
+using AIHelperLibrary.Abstractions;
+using System.Net;
 
 namespace AIHelperLibrary.Services
 {
     /// <summary>
-    /// A client for interacting with the OpenAI API.
-    /// Supports predefined, dynamic prompts and context-aware chat sessions.
+    /// A client for interacting with the OpenAI API, implementing the <see cref="IAIClient"/> interface.
+    /// Supports dynamic prompts, retry logic, and configuration options.
     /// </summary>
-    public class OpenAIClient
+    public class OpenAIClient : IAIClient
     {
         private readonly string _apiKey;
         private readonly AIExtensionHelperConfiguration _config;
-        private static readonly HttpClient HttpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
         private const string BaseUrl = "https://api.openai.com/v1";
-
-        // Maintain chat histories for instances
         private readonly Dictionary<string, List<object>> _chatHistories = new();
 
         /// <summary>
-        /// Initializes a new instance of the OpenAIClient.
+        /// Initializes a new instance of the <see cref="OpenAIClient"/> class.
         /// </summary>
         /// <param name="apiKey">Your OpenAI API key.</param>
         /// <param name="config">The configuration for the client.</param>
@@ -33,6 +29,21 @@ namespace AIHelperLibrary.Services
         {
             _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _httpClient = CreateHttpClient();
+        }
+
+        /// <summary>
+        /// Creates a configured HttpClient with optional proxy settings.
+        /// </summary>
+        private HttpClient CreateHttpClient()
+        {
+            var handler = new HttpClientHandler();
+            if (!string.IsNullOrWhiteSpace(_config.ProxyUrl))
+            {
+                handler.Proxy = new WebProxy(_config.ProxyUrl, _config.ProxyPort);
+                handler.UseProxy = true;
+            }
+            return new HttpClient(handler);
         }
 
         /// <summary>
@@ -45,68 +56,32 @@ namespace AIHelperLibrary.Services
             {
                 AIModel.GPT_4 => "gpt-4",
                 AIModel.GPT_3_5_Turbo => "gpt-3.5-turbo",
+                AIModel.GPT_3_5_Turbo_16k => "gpt-3.5-turbo-16k",
+                AIModel.GPT_4_32k => "gpt-4-32k",
+                AIModel.GPT_4o => "gpt-4o",
+                AIModel.GPT_4o_Mini => "gpt-4o-mini",
                 _ => throw new ArgumentException("Invalid AI model.")
             };
         }
 
-        /// <summary>
-        /// Sends a text prompt to the OpenAI API and retrieves the response.
-        /// </summary>
-        /// <param name="prompt">The user prompt.</param>
-        /// <returns>The AI-generated response.</returns>
-        /// <exception cref="ArgumentException">Thrown when the prompt is null or empty.</exception>
+        /// <inheritdoc />
         public async Task<string> GenerateTextAsync(string prompt)
         {
             ValidateInput(prompt, nameof(prompt));
-
             var requestBody = BuildRequestBody(prompt);
             return await ExecuteRequestAsync(requestBody);
         }
 
-        /// <summary>
-        /// Sends a predefined prompt along with user input to the OpenAI API.
-        /// </summary>
-        /// <param name="predefinedPrompt">The predefined prompt template.</param>
-        /// <param name="userInput">The user input to append to the predefined prompt.</param>
-        /// <returns>The AI-generated response.</returns>
+        /// <inheritdoc />
         public async Task<string> GenerateTextWithPredefinedPromptAsync(string predefinedPrompt, string userInput)
         {
             ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
             ValidateInput(userInput, nameof(userInput));
-
-            var prompt = $"{predefinedPrompt}\n{userInput}";
-            return await GenerateTextAsync(prompt);
+            var combinedPrompt = $"{predefinedPrompt}\n{userInput}";
+            return await GenerateTextAsync(combinedPrompt);
         }
 
-        /// <summary>
-        /// Sends a dynamic prompt along with user input to the OpenAI API.
-        /// </summary>
-        /// <param name="promptManager">The manager responsible for storing dynamic prompts.</param>
-        /// <param name="key">The key identifying the dynamic prompt.</param>
-        /// <param name="userInput">The user input to append to the dynamic prompt.</param>
-        /// <returns>The AI-generated response.</returns>
-        public async Task<string> GenerateTextWithDynamicPromptAsync(DynamicPromptManager promptManager, string key, string userInput)
-        {
-            if (promptManager == null)
-                throw new ArgumentNullException(nameof(promptManager));
-
-            ValidateInput(key, nameof(key));
-            ValidateInput(userInput, nameof(userInput));
-
-            var predefinedPrompt = promptManager.GetPrompt(key);
-            ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
-
-            var prompt = $"{predefinedPrompt}\n{userInput}";
-            return await GenerateTextAsync(prompt);
-        }
-
-        /// <summary>
-        /// Handles multi-turn conversations, maintaining chat context.
-        /// </summary>
-        /// <param name="instanceKey">A unique key identifying the chat instance.</param>
-        /// <param name="userMessage">The user's message.</param>
-        /// <param name="initialPrompt">The system's initial prompt.</param>
-        /// <returns>The AI-generated response.</returns>
+        /// <inheritdoc />
         public async Task<string> GenerateChatResponseAsync(string instanceKey, string userMessage, string initialPrompt)
         {
             ValidateInput(instanceKey, nameof(instanceKey));
@@ -139,13 +114,98 @@ namespace AIHelperLibrary.Services
             return await ExecuteRequestAsync(requestBody);
         }
 
-        /// <summary>
-        /// Validates that the input string is not null, empty, or whitespace.
-        /// </summary>
-        private static void ValidateInput(string input, string parameterName)
+        /// <inheritdoc />
+        public async Task<string> GenerateTextWithDynamicPromptAsync(DynamicPromptManager promptManager, string key, string userInput)
         {
-            if (string.IsNullOrWhiteSpace(input))
-                throw new ArgumentException($"{parameterName} cannot be null or empty.", parameterName);
+            if (promptManager == null)
+                throw new ArgumentNullException(nameof(promptManager));
+
+            ValidateInput(key, nameof(key));
+            ValidateInput(userInput, nameof(userInput));
+
+            var predefinedPrompt = promptManager.GetPrompt(key);
+            ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
+
+            var requestBody = new
+            {
+                model = GetModelString(),
+                messages = new[]
+                {
+                    new { role = "system", content = predefinedPrompt },
+                    new { role = "user", content = userInput }
+                },
+                max_tokens = _config.MaxTokens,
+                temperature = _config.Temperature,
+                top_p = _config.TopP
+            };
+
+            return await ExecuteRequestAsync(requestBody);
+        }
+
+        /// <summary>
+        /// Executes an HTTP request with retry logic.
+        /// </summary>
+        private async Task<string> ExecuteRequestAsync(object requestBody)
+        {
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+            foreach (var header in _config.CustomHeaders)
+            {
+                _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
+
+            var requestJson = JsonConvert.SerializeObject(requestBody);
+            if (_config.EnableLogging)
+            {
+                Console.WriteLine($"Request: {requestJson}");
+            }
+
+            var response = await ExecuteWithRetryAsync(() =>
+                _httpClient.PostAsync($"{BaseUrl}/chat/completions",
+                    new StringContent(requestJson, Encoding.UTF8, "application/json")));
+
+            if (_config.EnableLogging)
+            {
+                Console.WriteLine($"Response: {response}");
+            }
+
+            var result = JsonConvert.DeserializeObject<dynamic>(response);
+            if (result?.choices?[0]?.message?.content == null)
+            {
+                throw new InvalidOperationException("Unexpected response format.");
+            }
+            return result.choices[0].message.content.ToString();
+        }
+
+        /// <summary>
+        /// Executes a task with retry logic based on configuration settings.
+        /// </summary>
+        private async Task<string> ExecuteWithRetryAsync(Func<Task<HttpResponseMessage>> action)
+        {
+            for (int attempt = 0; attempt < _config.MaxRetryCount; attempt++)
+            {
+                try
+                {
+                    var response = await action();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                    if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
+                    {
+                        throw new HttpRequestException($"Non-retriable error: {response.StatusCode}");
+                    }
+                }
+                catch (Exception ex) when (attempt < _config.MaxRetryCount - 1)
+                {
+                    if (_config.EnableLogging)
+                    {
+                        Console.WriteLine($"Retry {attempt + 1}/{_config.MaxRetryCount} failed: {ex.Message}");
+                    }
+                    await Task.Delay(_config.RetryDelayMs);
+                }
+            }
+            throw new Exception("Exceeded maximum retry attempts.");
         }
 
         /// <summary>
@@ -167,30 +227,14 @@ namespace AIHelperLibrary.Services
         }
 
         /// <summary>
-        /// Executes the API request and processes the response.
+        /// Validates input parameters.
         /// </summary>
-        private async Task<string> ExecuteRequestAsync(object requestBody)
+        private static void ValidateInput(string input, string parameterName)
         {
-            HttpClient.DefaultRequestHeaders.Clear();
-            HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-
-            foreach (var header in _config.CustomHeaders)
+            if (string.IsNullOrWhiteSpace(input))
             {
-                HttpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+                throw new ArgumentException($"{parameterName} cannot be null or empty.", parameterName);
             }
-
-            var response = await HttpClient.PostAsync($"{BaseUrl}/chat/completions",
-                new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json"));
-
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadAsStringAsync();
-            dynamic? json = JsonConvert.DeserializeObject(result);
-
-            if (json?.choices == null || json.choices.Count == 0 || json.choices[0]?.message?.content == null)
-                throw new InvalidOperationException("Unexpected response format or content is null.");
-
-            return json.choices[0].message.content;
         }
     }
 }

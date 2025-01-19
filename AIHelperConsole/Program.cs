@@ -2,12 +2,10 @@
 using AIHelperLibrary.Prompts;
 using AIHelperLibrary.Models;
 using AIHelperLibrary.Configurations;
-using System;
-using System.Threading.Tasks;
 
 class Program
 {
-    static async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Console.WriteLine("Welcome to the AI Helper Test Program!");
         Console.Write("Enter your OpenAI API Key: ");
@@ -23,12 +21,15 @@ class Program
         var config = new AIExtensionHelperConfiguration
         {
             Language = Language.English,
-            DefaultModel = AIModel.GPT_3_5_Turbo,
+            DefaultModel = AIModel.GPT_4o_Mini,
             MaxTokens = 150,
             Temperature = 0.7,
             TopP = 1.0,
             RequestTimeoutMs = 10000,
-            EnableLogging = true
+            Instructions = "You are an AI assistant.",
+            Tools = new() { "code_interpreter" },
+            MaxRetryCount = 3,
+            RetryDelayMs = 2000
         };
 
         var client = new OpenAIClient(apiKey, config);
@@ -98,9 +99,16 @@ class Program
             return;
         }
 
-        var result = await client.GenerateTextAsync(prompt);
-        Console.WriteLine("\n--- AI Response ---");
-        Console.WriteLine(result);
+        try
+        {
+            var result = await client.GenerateTextAsync(prompt);
+            Console.WriteLine("\n--- AI Response ---");
+            Console.WriteLine(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating text: {ex.Message}");
+        }
     }
 
     private static async Task TestPredefinedPrompt(OpenAIClient client)
@@ -115,9 +123,16 @@ class Program
             return;
         }
 
-    var result = await client.GenerateTextWithPredefinedPromptAsync(PromptManager.GetPrompt(PromptType.Summarize), userInput);
-        Console.WriteLine("\n--- AI Response ---");
-        Console.WriteLine(result);
+        try
+        {
+            var result = await client.GenerateTextWithPredefinedPromptAsync(PromptManager.GetPrompt(PromptType.Summarize), userInput);
+            Console.WriteLine("\n--- AI Response ---");
+            Console.WriteLine(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating predefined prompt: {ex.Message}");
+        }
     }
 
     private static async Task TestDynamicPrompt(OpenAIClient client)
@@ -146,8 +161,15 @@ class Program
             return;
         }
 
-        var result = await client.GenerateTextWithDynamicPromptAsync(promptManager, key, userInput);
-        Console.WriteLine("\n--- AI Response ---");
-        Console.WriteLine(result);
+        try
+        {
+            var result = await client.GenerateTextWithDynamicPromptAsync(promptManager, key, userInput);
+            Console.WriteLine("\n--- AI Response ---");
+            Console.WriteLine(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating dynamic prompt: {ex.Message}");
+        }
     }
 }

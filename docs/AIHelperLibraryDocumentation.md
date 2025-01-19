@@ -1,45 +1,40 @@
 # AI Helper Library Documentation
 
 ## Overview
-The **AI Helper Library** is a modular and reusable library built in C# for interacting with OpenAI's API. It offers robust functionality for managing prompts, generating responses, and creating chatbot-like experiences with persistent context. The library is designed to be developer-friendly and highly customizable, making it easy to integrate AI-driven capabilities into .NET applications.
-
-This documentation serves as a comprehensive guide to understanding, configuring, and extending the capabilities of the library.
+The **AI Helper Library** is a comprehensive C# library for seamless integration with OpenAI's API. It provides robust support for generating responses, managing custom prompts, and creating stateful chatbot experiences. With built-in retry logic, proxy support, and flexible configuration, it is designed to empower .NET developers to integrate AI features efficiently.
 
 ---
 
 ## Features Overview
 
 ### Core Functionality
-1. **OpenAIClient**
-   - Manages communication with OpenAI's API endpoints.
-   - Configurable support for models such as `GPT-3.5-Turbo` and `GPT-4`.
-   - Single-turn and multi-turn conversations with retained context.
-   - Automatically manages chat history with configurable limits.
+1. **OpenAIClient**:
+   - Fully customizable interaction with OpenAI's endpoints.
+   - Supports models such as `GPT-3.5-Turbo`, `GPT-4`, `GPT-4o` and more.
+   - Configurable retry logic and error handling.
+   - Proxy support for secure connections in restricted environments.
 
-2. **Prompt Management**
-   - **Predefined Prompts**: Use built-in templates for tasks like summarization or Q&A.
-   - **Dynamic Prompts**: Programmatically create, store, and reuse custom prompts.
+2. **Dynamic Prompt Management**:
+   - Define, store, and reuse dynamic prompts programmatically.
+   - Add contextual system prompts for AI behavior customization.
 
-3. **Configuration Options**
-   - Allows fine-tuning via `AIExtensionHelperConfiguration`, including token limits, temperature, and logging.
+3. **Configuration Options**:
+   - Fine-tune behavior via `AIExtensionHelperConfiguration`, including proxy settings, retries, and instruction overrides.
 
-4. **Chatbot Instances**
-   - Persistent context for multiple chatbot sessions.
-   - Maintain conversation history for enhanced user experience.
+4. **Chatbot Management**:
+   - Maintain conversation histories for multiple independent chatbot sessions.
+   - Configurable message limits for context management.
 
-5. **Error Handling**
-   - Validates inputs and manages API errors gracefully.
-   - Logs detailed error messages when enabled.
-
-6. **Sample Console Application**
-   - Demonstrates key features with a lightweight CLI for testing and integration.
+5. **Retry and Logging**:
+   - Built-in retry logic with exponential backoff.
+   - Optional request/response logging for debugging.
 
 ---
 
 ## Installation Guide
 
 ### Prerequisites
-1. Install the .NET SDK (version 6.0 or later).
+1. Install the .NET SDK (6.0 or higher).
 2. Obtain an OpenAI API key from the [OpenAI Platform](https://platform.openai.com/).
 
 ### Setting Up the Project
@@ -68,56 +63,67 @@ dotnet run --project AIHelperConsole
 ### 1. Initialize the Library
 
 #### Configuration Example
-Set up `AIExtensionHelperConfiguration` to define default behaviors:
-
+Set up `AIExtensionHelperConfiguration` with your preferences:
 ```csharp
 var config = new AIExtensionHelperConfiguration
 {
-    DefaultModel = AIModel.GPT_3_5_Turbo,
-    MaxTokens = 200,
-    Temperature = 0.7,
-    TopP = 1.0,
-    RequestTimeoutMs = 10000,
-    EnableLogging = true
-    MaxChatHistorySize = 10
+    DefaultModel = AIModel.GPT_4,
+    MaxTokens = 250,
+    Temperature = 0.8,
+    TopP = 0.9,
+    RequestTimeoutMs = 15000,
+    EnableLogging = true,
+    ProxyUrl = "http://proxy.example.com",
+    ProxyPort = 8080,
+    Instructions = "You are a helpful assistant.",
+    Tools = new List<string> { "code_interpreter" },
+    MaxRetryCount = 5,
+    RetryDelayMs = 3000
 };
 
 var client = new OpenAIClient("your-api-key", config);
 ```
 
+---
+
 ### 2. Generate AI Responses
 
-#### Freeform Prompt
-Send a custom prompt to the AI:
+#### Custom Prompt
+Send a simple custom prompt to the AI:
 ```csharp
-var response = await client.GenerateTextAsync("Explain quantum computing in simple terms.");
+var response = await client.GenerateTextAsync("Explain the difference between AI and machine learning.");
 Console.WriteLine(response);
 ```
 
-### 3. Predefined Prompts
-Use built-in prompts for specific tasks:
+#### Predefined Prompt
+Use predefined templates for specific tasks:
 ```csharp
-var result = await client.GenerateTextWithPredefinedPromptAsync(PromptManager.Summarize, "Artificial intelligence is revolutionizing industries...");
-Console.WriteLine(result);
+var predefinedPrompt = PromptManager.GetPrompt(PromptType.Summarize);
+var summary = await client.GenerateTextWithPredefinedPromptAsync(predefinedPrompt, "Artificial intelligence is transforming the tech industry...");
+Console.WriteLine(summary);
 ```
 
-### 4. Dynamic Prompts
-Create and reuse custom prompts programmatically:
+---
+
+### 3. Dynamic Prompts
+Define and use custom prompts programmatically:
 ```csharp
 var promptManager = new DynamicPromptManager();
-promptManager.AddPrompt("WelcomeMessage", "Greet the user warmly and politely.");
+promptManager.AddPrompt("FriendlyGreeting", "Please greet the user warmly.");
 
-var response = await client.GenerateTextWithDynamicPromptAsync(promptManager, "WelcomeMessage", "Hello!");
+var response = await client.GenerateTextWithDynamicPromptAsync(promptManager, "FriendlyGreeting", "Hello, AI!");
 Console.WriteLine(response);
 ```
 
-### 5. Persistent Chatbot Conversations
-Maintain context for multi-turn conversations:
+---
+
+### 4. Persistent Chatbot Conversations
+Manage multi-turn conversations with context retention:
 ```csharp
 var chatResponse = await client.GenerateChatResponseAsync(
-    "SupportBot",
+    "CustomerSupportBot",
     "What are your working hours?",
-    "You are a polite customer service assistant."
+    "You are a helpful and polite customer support assistant."
 );
 Console.WriteLine(chatResponse);
 ```
@@ -126,76 +132,50 @@ Console.WriteLine(chatResponse);
 
 ## Advanced Features
 
-### Configuration Details
-The `AIExtensionHelperConfiguration` class supports the following properties:
+### Configuration Properties
 
-| Property           | Description                                     | Default Value        |
-|--------------------|-------------------------------------------------|----------------------|
-| `DefaultModel`     | AI model to use (`GPT-3.5-Turbo`, `GPT-4`).     | `GPT-3.5-Turbo`      |
-| `MaxTokens`        | Maximum tokens for each response.              | `150`                |
-| `Temperature`      | Controls randomness (0.0 = deterministic).     | `0.7`                |
-| `TopP`             | Sampling parameter for diversity.              | `1.0`                |
-| `RequestTimeoutMs` | API request timeout in milliseconds.            | `10000` (10 seconds) |
-| `EnableLogging`    | Enable or disable logging.                     | `false`              |
-
-### Chatbot Instances
-Chatbot sessions maintain conversation histories for context-aware responses. Each instance is identified by a unique key, allowing multiple chatbots to function independently.
+| Property            | Description                                          | Default Value        |
+|---------------------|------------------------------------------------------|----------------------|
+| `DefaultModel`      | AI model to use (`GPT-4`, `GPT-3.5-Turbo`).          | `GPT-3.5-Turbo`      |
+| `MaxTokens`         | Maximum tokens per response.                        | `150`                |
+| `Temperature`       | Controls creativity (0.0 = deterministic).          | `0.7`                |
+| `TopP`              | Alternative to temperature for diversity.           | `1.0`                |
+| `RequestTimeoutMs`  | API timeout in milliseconds.                        | `10000` (10 seconds) |
+| `EnableLogging`     | Enables debug logging of requests/responses.        | `false`              |
+| `ProxyUrl`          | Proxy server URL.                                   | `""`                 |
+| `ProxyPort`         | Proxy server port.                                  | `0`                  |
+| `Instructions`      | Behavior instructions for the assistant.            | `"You are an AI assistant."` |
+| `Tools`             | Tools enabled for the assistant (e.g., "code_interpreter"). | `[]`          |
+| `MaxRetryCount`     | Maximum retries for failed requests.                | `3`                  |
+| `RetryDelayMs`      | Delay between retries in milliseconds.              | `2000`               |
 
 ---
 
-## Project Structure
+### Retry Logic
+The library provides robust retry logic to handle transient errors:
+- Retries are configurable via `MaxRetryCount` and `RetryDelayMs`.
+- Logs retries when `EnableLogging` is set to `true`.
 
-```plaintext
-ai-helper-library/
-├── AIHelper.sln                # Solution file
-├── AIHelperLibrary/            # Core library
-│   ├── Configurations/         # Configuration models
-│   ├── Models/                 # Enums and data models
-│   ├── Prompts/                # Predefined and dynamic prompts
-│   ├── Services/               # OpenAIClient implementation
-│   └── AIHelperLibrary.csproj
-├── AIHelperConsole/            # Console application
-│   ├── Program.cs              # Entry point for the sample app
-│   └── AIHelperConsole.csproj
-└── docs/                       # Documentation folder
-    └── AIHelperLibraryDocumentation.md
-```
+---
+
+## Testing with Console Application
+
+### Features Demonstrated:
+- Generate responses with custom, predefined, and dynamic prompts.
+- Manage chatbot sessions with persistent context.
+- Test retry logic and proxy settings.
 
 ---
 
 ## Future Enhancements
 
 ### Short-Term
-1. **Retry Logic**: Add exponential backoff for API calls.
-2. **Prompt Persistence**: Save and load dynamic prompts from JSON or database.
-3. **Enhanced Error Handling**: Provide more descriptive error messages.
+1. **Prompt Persistence**: Save and load prompts from external storage.
+2. **Advanced Error Reporting**: Return detailed error metadata.
 
 ### Long-Term
-1. **Multi-Model Support**: Integrate additional AI models like Azure OpenAI.
-2. **Stateful Management**: Build advanced session management for chatbots.
-3. **Developer Tools**: Provide Visual Studio extensions for scaffolding projects.
-4. **Community Engagement**: Publish detailed tutorials and encourage contributions.
-
----
-
-## Contribution Guidelines
-
-1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "Add feature: your-feature-name"
-   ```
-4. Push your branch:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-5. Open a pull request.
-
----
+1. **Enhanced Model Support**: Extend support for OpenAI's latest capabilities.
+2. **User Authentication**: Secure chatbot sessions with user authentication.
 
 ## Contact Information
 For support or inquiries, contact **Nathan Sanchez** via GitHub or email at `ns.dev.contact@gmail.com`.

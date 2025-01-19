@@ -1,18 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- NuGet Metadata -->
     <PackageId>AIHelperLibrary</PackageId>
-    <Version>0.0.1</Version>
+    <Version>1.0.0</Version>
     <Authors>Nathan Sanchez</Authors>
-    <TargetFramework>net8.0</TargetFramework>
-    <Description>A modular library for interacting with OpenAI's API.</Description>
+    <Description>A modular library for interacting with OpenAI's API, including dynamic prompts, chatbot sessions, and robust configuration options.</Description>
     <RepositoryUrl>https://github.com/NathanSanchezDev/ai-helper-library</RepositoryUrl>
-    <PackageTags>AI OpenAI GPT C#</PackageTags>
+    <PackageTags>AI OpenAI GPT C# MachineLearning</PackageTags>
+    <LicenseUrl>https://opensource.org/licenses/MIT</LicenseUrl>
+    <ProjectUrl>https://github.com/NathanSanchezDev/ai-helper-library</ProjectUrl>
+    <Copyright>Copyright © 2025 Nathan Sanchez</Copyright>
+
+    <!-- Framework and Features -->
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Configuration -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Package Dependencies -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

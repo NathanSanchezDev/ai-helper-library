@@ -10,7 +10,7 @@ The **AI Helper Library** is a comprehensive C# library for seamless integration
 ### Core Functionality
 1. **OpenAIClient**:
    - Fully customizable interaction with OpenAI's endpoints.
-   - Supports models such as `GPT-3.5-Turbo`, `GPT-4`, `GPT-4o` and more.
+   - Supports models such as `GPT-3.5-Turbo`, `GPT-4`, `GPT-4o`, and more.
    - Configurable retry logic and error handling.
    - Proxy support for secure connections in restricted environments.
 
@@ -130,6 +130,37 @@ Console.WriteLine(chatResponse);
 
 ---
 
+## Supported Models and Features
+
+### Supported AI Models
+The library supports the following OpenAI models:
+
+| Model Name                      | Description                                                 |
+|---------------------------------|-------------------------------------------------------------|
+| `GPT-3.5-Turbo`                 | Standard model optimized for cost and speed.               |
+| `GPT-3.5-Turbo-16k`             | Higher context window for larger inputs.                   |
+| `GPT-3.5-Turbo-0125`            | Slightly improved instruction-following capabilities.       |
+| `GPT-3.5-Turbo-Instruct`        | Enhanced for instructional and fine-grained tasks.          |
+| `GPT-3.5-Turbo-1106`            | Latest refined variant of GPT-3.5.                         |
+| `GPT-4`                         | Advanced model for complex tasks.                          |
+| `GPT-4-Turbo`                   | Faster variant of GPT-4 optimized for efficiency.           |
+| `GPT-4o`                        | Optimized variant of GPT-4 for specific tasks.              |
+| `GPT-4o-Mini`                   | Lightweight and fast version of GPT-4o.                    |
+| `GPT-4o-RealTime-Preview`       | Experimental real-time optimized version.                   |
+
+### Excluded Features
+Currently, the library does **not** support the following:
+- Image generation models (`DALL-E 2`, `DALL-E 3`).
+- Speech-to-text models (`Whisper-1`, `TTS-1`).
+- Moderation and specialty models (`Omni-Moderation`).
+
+### Supported Providers
+The library is designed specifically for OpenAI’s API. Future updates may include:
+- Integration with Azure OpenAI Service.
+- Support for custom fine-tuned models.
+
+---
+
 ## Advanced Features
 
 ### Configuration Properties
@@ -151,13 +182,6 @@ Console.WriteLine(chatResponse);
 
 ---
 
-### Retry Logic
-The library provides robust retry logic to handle transient errors:
-- Retries are configurable via `MaxRetryCount` and `RetryDelayMs`.
-- Logs retries when `EnableLogging` is set to `true`.
-
----
-
 ## Testing with Console Application
 
 ### Features Demonstrated:
@@ -176,6 +200,8 @@ The library provides robust retry logic to handle transient errors:
 ### Long-Term
 1. **Enhanced Model Support**: Extend support for OpenAI's latest capabilities.
 2. **User Authentication**: Secure chatbot sessions with user authentication.
+
+---
 
 ## Contact Information
 For support or inquiries, contact **Nathan Sanchez** via GitHub or email at `ns.dev.contact@gmail.com`.

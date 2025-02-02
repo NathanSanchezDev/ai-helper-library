@@ -1,36 +1,58 @@
 # AI Helper Library
 
-The **AI Helper Library** is a modular and reusable library built in C# for interacting with OpenAI's API. It offers robust functionality for managing prompts, generating responses, and creating chatbot-like experiences with persistent context. The library is designed to be developer-friendly and highly customizable, making it easy to integrate AI-driven capabilities into .NET applications.
+The **AI Helper Library** is a modular and reusable C# library for interacting with OpenAI's API. It provides robust functionality for managing prompts, generating responses, and creating chatbot-like experiences with persistent context. Designed to be developer-friendly and highly customizable, this library simplifies AI integration into .NET applications.
 
 ---
 
-## Features Overview
+## Features
 
 - Simplifies communication with OpenAI's API.
-- Supports predefined and dynamic prompts.
+- Supports both predefined and dynamic prompts.
 - Enables multi-turn conversations with context retention.
 - Provides extensive configuration options.
 - Includes a sample console application for demonstration.
 
 ---
 
-## Installation Guide
+## Installation
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/NathanSanchezDev/ai-helper-library.git
-   cd ai-helper-library
-   ```
+### Clone the Repository
+```bash
+git clone https://github.com/NathanSanchezDev/ai-helper-library.git
+cd ai-helper-library
+```
 
-2. **Build the Project**:
-   ```bash
-   dotnet build
-   ```
+### Build the Project
+```bash
+dotnet build
+```
 
-3. **Run the Console Application**:
-   ```bash
-   dotnet run --project AIHelperConsole
-   ```
+### Run the Console Application
+```bash
+dotnet run --project AIHelperConsole
+```
+
+---
+
+## NuGet Package
+
+The **AI Helper Library** is available on [NuGet.org](https://www.nuget.org/packages/AIHelperLibrary/).
+
+### Install via .NET CLI
+```bash
+dotnet add package AIHelperLibrary --version 1.0.1
+```
+
+### Install via Package Manager
+```powershell
+Install-Package AIHelperLibrary -Version 1.0.1
+```
+
+### Using PackageReference
+For projects that support `PackageReference`, add the following XML node to your project file:
+```xml
+<PackageReference Include="AIHelperLibrary" Version="1.0.1" />
+```
 
 ---
 
@@ -38,13 +60,14 @@ The **AI Helper Library** is a modular and reusable library built in C# for inte
 
 For detailed usage instructions, advanced configuration options, and future plans, refer to the [full documentation](docs/AIHelperLibraryDocumentation.md).
 
+---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License**.
 
 ---
 
-## Contact Information
+## Contact
 
 For support or inquiries, contact **Nathan Sanchez** via GitHub or email at `ns.dev.contact@gmail.com`.

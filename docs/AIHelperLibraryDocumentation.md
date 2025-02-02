@@ -135,18 +135,25 @@ Console.WriteLine(chatResponse);
 ### Supported AI Models
 The library supports the following OpenAI models:
 
-| Model Name                      | Description                                                 |
-|---------------------------------|-------------------------------------------------------------|
-| `GPT-3.5-Turbo`                 | Standard model optimized for cost and speed.               |
-| `GPT-3.5-Turbo-16k`             | Higher context window for larger inputs.                   |
-| `GPT-3.5-Turbo-0125`            | Slightly improved instruction-following capabilities.       |
-| `GPT-3.5-Turbo-Instruct`        | Enhanced for instructional and fine-grained tasks.          |
-| `GPT-3.5-Turbo-1106`            | Latest refined variant of GPT-3.5.                         |
-| `GPT-4`                         | Advanced model for complex tasks.                          |
-| `GPT-4-Turbo`                   | Faster variant of GPT-4 optimized for efficiency.           |
-| `GPT-4o`                        | Optimized variant of GPT-4 for specific tasks.              |
-| `GPT-4o-Mini`                   | Lightweight and fast version of GPT-4o.                    |
-| `GPT-4o-RealTime-Preview`       | Experimental real-time optimized version.                   |
+| Model Name                           | Description                                                            |
+|--------------------------------------|------------------------------------------------------------------------|
+| `GPT-3.5-Turbo`                      | Standard model optimized for cost and speed.                           |
+| `GPT-3.5-Turbo-16k`                  | Higher context window for larger inputs.                               |
+| `GPT-3.5-Turbo-0125`                 | Slightly improved instruction-following capabilities.                  |
+| `GPT-3.5-Turbo-Instruct`             | Enhanced for instructional and fine-grained tasks.                     |
+| `GPT-3.5-Turbo-1106`                 | Latest refined variant of GPT-3.5.                                       |
+| `GPT-4`                              | Advanced model for complex tasks.                                      |
+| `GPT-4-Turbo`                        | Faster variant of GPT-4 optimized for efficiency.                      |
+| `GPT-4o`                             | Optimized variant of GPT-4 for specific tasks.                         |
+| `GPT-4o-Mini`                        | Lightweight and fast version of GPT-4o.                                |
+| `GPT-4o-RealTime-Preview`            | Experimental real-time optimized version of GPT-4o.                    |
+| `ChatGPT-4o-Latest`                  | Latest optimized model variant used in ChatGPT.                        |
+| `o1`                                 | Optimized variant from the o1 series for improved performance.         |
+| `o1-mini`                            | Lightweight mini variant from the o1 series for efficient usage.       |
+| `o1-preview`                         | Preview variant from the o1 series with early access features.         |
+| `o3-mini`                            | Next-generation mini variant from the o3 series offering high efficiency.|
+| `GPT-4o-Mini-RealTime-Preview`       | Mini real-time preview variant of GPT-4o.                              |
+| `GPT-4o-Audio-Preview`               | Audio-optimized preview variant of GPT-4o.                             |
 
 ### Excluded Features
 Currently, the library does **not** support the following:

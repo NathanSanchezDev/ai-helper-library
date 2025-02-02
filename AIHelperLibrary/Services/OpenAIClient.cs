@@ -71,14 +71,32 @@ namespace AIHelperLibrary.Services
 
                 // Optimized Models
                 AIModel.GPT_4o => "gpt-4o",
+                AIModel.GPT_4o_2024_08_06 => "gpt-4o-2024-08-06",
+                AIModel.ChatGPT_4o_Latest => "chatgpt-4o-latest",
                 AIModel.GPT_4o_Mini => "gpt-4o-mini",
                 AIModel.GPT_4o_Mini_2024_07_18 => "gpt-4o-mini-2024-07-18",
-                AIModel.GPT_4o_2024_05_13 => "gpt-4o-2024-05-13",
-                AIModel.GPT_4o_2024_08_06 => "gpt-4o-2024-08-06",
-                AIModel.GPT_4o_2024_11_20 => "gpt-4o-2024-11-20",
+
+                AIModel.O1 => "o1",
+                AIModel.O1_2024_12_17 => "o1-2024-12-17",
+                AIModel.O1_Mini => "o1-mini",
+                AIModel.O1_Mini_2024_09_12 => "o1-mini-2024-09-12",
+                AIModel.O3_Mini => "o3-mini",
+                AIModel.O3_Mini_2025_01_31 => "o3-mini-2025-01-31",
+                AIModel.O1_Preview => "o1-preview",
+                AIModel.O1_Preview_2024_09_12 => "o1-preview-2024-09-12",
+
                 AIModel.GPT_4o_RealTime_Preview => "gpt-4o-realtime-preview",
                 AIModel.GPT_4o_RealTime_Preview_2024_10_01 => "gpt-4o-realtime-preview-2024-10-01",
                 AIModel.GPT_4o_RealTime_Preview_2024_12_17 => "gpt-4o-realtime-preview-2024-12-17",
+
+                AIModel.GPT_4o_Mini_RealTime_Preview => "gpt-4o-mini-realtime-preview",
+                AIModel.GPT_4o_Mini_RealTime_Preview_2024_12_17 => "gpt-4o-mini-realtime-preview-2024-12-17",
+
+                AIModel.GPT_4o_Audio_Preview => "gpt-4o-audio-preview",
+                AIModel.GPT_4o_Audio_Preview_2024_12_17 => "gpt-4o-audio-preview-2024-12-17",
+
+                AIModel.GPT_4o_2024_05_13 => "gpt-4o-2024-05-13",
+                AIModel.GPT_4o_2024_11_20 => "gpt-4o-2024-11-20",
 
                 _ => throw new ArgumentException("Invalid AI model.")
             };

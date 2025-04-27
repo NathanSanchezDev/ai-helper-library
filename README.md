@@ -1,20 +1,24 @@
-# AI Helper Library
+# 🚀 AI Helper Library
 
-The **AI Helper Library** is a modular and reusable C# library for interacting with OpenAI's API. It provides robust functionality for managing prompts, generating responses, and creating chatbot-like experiences with persistent context. Designed to be developer-friendly and highly customizable, this library simplifies AI integration into .NET applications.
-
----
-
-## Features
-
-- Simplifies communication with OpenAI's API.
-- Supports both predefined and dynamic prompts.
-- Enables multi-turn conversations with context retention.
-- Provides extensive configuration options.
-- Includes a sample console application for demonstration.
+The **AI Helper Library** is a modern, modular, and provider-agnostic C# SDK for interacting with today's leading AI services — including OpenAI (GPT models) and Anthropic (Claude models).  
+It provides robust tools for dynamic prompts, chat histories, retry handling, multi-provider configuration, and powerful customization — designed for **production-grade** .NET apps.
 
 ---
 
-## Installation
+## ✨ Features
+
+- **Unified API** for OpenAI (GPT, O-series) and Anthropic Claude (3.x, 3.5, 3.7) models.
+- **Predefined and dynamic prompts** for flexible workflows.
+- **Multi-turn conversations** with persistent chat history.
+- **Smart configuration system** for tokens, retries, proxies, system prompts, and more.
+- **Automatic provider-specific handling** (e.g., OpenAI o-model differences).
+- **Built-in retry logic** for rate limiting and transient errors.
+- **Ready-to-run sample console application**.
+- **Future-proof architecture** for easy extension to Cohere, Gemini, Mistral, etc.
+
+---
+
+## 📦 Installation
 
 ### Clone the Repository
 ```bash
@@ -27,47 +31,67 @@ cd ai-helper-library
 dotnet build
 ```
 
-### Run the Console Application
+### Run the Sample Console Application
 ```bash
 dotnet run --project AIHelperConsole
 ```
 
 ---
 
-## NuGet Package
+## 🔥 NuGet Package
 
-The **AI Helper Library** is available on [NuGet.org](https://www.nuget.org/packages/AIHelperLibrary/).
+The **AI Helper Library** is published on [NuGet.org](https://www.nuget.org/packages/AIHelperLibrary/).
 
 ### Install via .NET CLI
 ```bash
-dotnet add package AIHelperLibrary --version 1.0.1
+dotnet add package AIHelperLibrary --version 1.1.0
 ```
 
 ### Install via Package Manager
 ```powershell
-Install-Package AIHelperLibrary -Version 1.0.1
+Install-Package AIHelperLibrary -Version 1.1.0
 ```
 
 ### Using PackageReference
-For projects that support `PackageReference`, add the following XML node to your project file:
 ```xml
-<PackageReference Include="AIHelperLibrary" Version="1.0.1" />
+<PackageReference Include="AIHelperLibrary" Version="1.1.0" />
 ```
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-For detailed usage instructions, advanced configuration options, and future plans, refer to the [full documentation](docs/AIHelperLibraryDocumentation.md).
+**[→ Full Documentation Here](docs/AIHelperLibraryDocumentation.md)**
+
+Includes:
+- Setup & Configuration
+- Multi-provider usage (OpenAI vs Anthropic)
+- Advanced Prompt Management
+- Handling OpenAI o-series (`o1`, `o3-mini`, `o4-mini`) differences
+- Retry Strategies
+- Custom Proxy & Header Support
+- Future Plans & Roadmap
 
 ---
 
-## License
+## 🛡 License
 
-This project is licensed under the **MIT License**.
+Licensed under the **MIT License**.
 
 ---
 
-## Contact
+## 👨‍💼 Contact
 
-For support or inquiries, contact **Nathan Sanchez** via GitHub or email at `ns.dev.contact@gmail.com`.
+Created by **Nathan Sanchez**  
+📧 Email: `ns.dev.contact@gmail.com`  
+🔗 GitHub: [NathanSanchezDev](https://github.com/NathanSanchezDev)
+
+---
+
+# 📢 Quick Note
+
+⚡ The library intelligently handles OpenAI’s special **o-series models** (o1, o3-mini, o4-mini) —  
+**`temperature` and `top_p` are NOT sent for o-models** to match OpenAI’s requirements.  
+Only **`max_completion_tokens`** is sent for these models.
+
+This is **automatic** — no need for manual adjustments.

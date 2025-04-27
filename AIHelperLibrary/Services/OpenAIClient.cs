@@ -4,228 +4,247 @@ using AIHelperLibrary.Configurations;
 using AIHelperLibrary.Models;
 using AIHelperLibrary.Prompts;
 using AIHelperLibrary.Abstractions;
+using AIHelperLibrary.Helpers;
 using System.Net;
 
-namespace AIHelperLibrary.Services
+namespace AIHelperLibrary.Services;
+
+public class OpenAIClient : IAIClient
 {
-    /// <summary>
-    /// A client for interacting with the OpenAI API, implementing the <see cref="IAIClient"/> interface.
-    /// Supports dynamic prompts, retry logic, and configuration options.
-    /// </summary>
-    public class OpenAIClient : IAIClient
+    private readonly string _apiKey;
+    private readonly AIExtensionHelperConfiguration _config;
+    private readonly HttpClient _httpClient;
+    private const string BaseUrl = "https://api.openai.com/v1";
+    private readonly Dictionary<string, List<object>> _chatHistories = new();
+
+    public OpenAIClient(string apiKey, AIExtensionHelperConfiguration config)
     {
-        private readonly string _apiKey;
-        private readonly AIExtensionHelperConfiguration _config;
-        private readonly HttpClient _httpClient;
-        private const string BaseUrl = "https://api.openai.com/v1";
-        private readonly Dictionary<string, List<object>> _chatHistories = new();
+        _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _httpClient = CreateHttpClient();
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OpenAIClient"/> class.
-        /// </summary>
-        /// <param name="apiKey">Your OpenAI API key.</param>
-        /// <param name="config">The configuration for the client.</param>
-        public OpenAIClient(string apiKey, AIExtensionHelperConfiguration config)
+    private HttpClient CreateHttpClient()
+    {
+        var handler = new HttpClientHandler();
+        if (!string.IsNullOrWhiteSpace(_config.ProxyUrl))
         {
-            _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-            _httpClient = CreateHttpClient();
+            handler.Proxy = new WebProxy(_config.ProxyUrl, _config.ProxyPort);
+            handler.UseProxy = true;
         }
+        return new HttpClient(handler);
+    }
 
-        /// <summary>
-        /// Creates a configured HttpClient with optional proxy settings.
-        /// </summary>
-        private HttpClient CreateHttpClient()
+    private string GetModelString() => _config.DefaultModel.GetModelIdentifier();
+
+    public async Task<string> GenerateTextAsync(string prompt)
+    {
+        ValidateInput(prompt, nameof(prompt));
+        var requestBody = BuildRequestBody(prompt);
+        return await ExecuteRequestAsync(requestBody);
+    }
+
+    public async Task<string> GenerateTextWithPredefinedPromptAsync(string predefinedPrompt, string userInput)
+    {
+        ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
+        ValidateInput(userInput, nameof(userInput));
+        var combinedPrompt = $"{predefinedPrompt}\n{userInput}";
+        return await GenerateTextAsync(combinedPrompt);
+    }
+
+    public async Task<string> GenerateChatResponseAsync(string instanceKey, string userMessage, string initialPrompt)
+    {
+        ValidateInput(instanceKey, nameof(instanceKey));
+        ValidateInput(userMessage, nameof(userMessage));
+
+        var modelId = GetModelString();
+        OpenAIModelHelper.EnsureChatModel(modelId);
+
+        if (!_chatHistories.ContainsKey(instanceKey))
         {
-            var handler = new HttpClientHandler();
-            if (!string.IsNullOrWhiteSpace(_config.ProxyUrl))
+            _chatHistories[instanceKey] = new List<object>
             {
-                handler.Proxy = new WebProxy(_config.ProxyUrl, _config.ProxyPort);
-                handler.UseProxy = true;
-            }
-            return new HttpClient(handler);
-        }
-
-        /// <summary>
-        /// Maps the configured model to its corresponding OpenAI model string.
-        /// </summary>
-        /// <returns>The OpenAI model string.</returns>
-        private string GetModelString()
-        {
-            return _config.DefaultModel.GetModelIdentifier();
-        }
-
-        /// <inheritdoc />
-        public async Task<string> GenerateTextAsync(string prompt)
-        {
-            ValidateInput(prompt, nameof(prompt));
-            var requestBody = BuildRequestBody(prompt);
-            return await ExecuteRequestAsync(requestBody);
-        }
-
-        /// <inheritdoc />
-        public async Task<string> GenerateTextWithPredefinedPromptAsync(string predefinedPrompt, string userInput)
-        {
-            ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
-            ValidateInput(userInput, nameof(userInput));
-            var combinedPrompt = $"{predefinedPrompt}\n{userInput}";
-            return await GenerateTextAsync(combinedPrompt);
-        }
-
-        /// <inheritdoc />
-        public async Task<string> GenerateChatResponseAsync(string instanceKey, string userMessage, string initialPrompt)
-        {
-            ValidateInput(instanceKey, nameof(instanceKey));
-            ValidateInput(userMessage, nameof(userMessage));
-
-            if (!_chatHistories.ContainsKey(instanceKey))
-            {
-                _chatHistories[instanceKey] = new List<object>
-                {
-                    new { role = "system", content = initialPrompt }
-                };
-            }
-
-            _chatHistories[instanceKey].Add(new { role = "user", content = userMessage });
-
-            if (_chatHistories[instanceKey].Count > _config.MaxChatHistorySize)
-            {
-                _chatHistories[instanceKey].RemoveAt(0);
-            }
-
-            var requestBody = new
-            {
-                model = GetModelString(),
-                messages = _chatHistories[instanceKey],
-                max_tokens = _config.MaxTokens,
-                temperature = _config.Temperature,
-                top_p = _config.TopP
+                new { role = "system", content = initialPrompt }
             };
-
-            return await ExecuteRequestAsync(requestBody);
         }
 
-        /// <inheritdoc />
-        public async Task<string> GenerateTextWithDynamicPromptAsync(DynamicPromptManager promptManager, string key, string userInput)
+        _chatHistories[instanceKey].Add(new { role = "user", content = userMessage });
+
+        if (_chatHistories[instanceKey].Count > _config.MaxChatHistorySize)
         {
-            if (promptManager == null)
-                throw new ArgumentNullException(nameof(promptManager));
-
-            ValidateInput(key, nameof(key));
-            ValidateInput(userInput, nameof(userInput));
-
-            var predefinedPrompt = promptManager.GetPrompt(key);
-            ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
-
-            var requestBody = new
-            {
-                model = GetModelString(),
-                messages = new[]
-                {
-                    new { role = "system", content = predefinedPrompt },
-                    new { role = "user", content = userInput }
-                },
-                max_tokens = _config.MaxTokens,
-                temperature = _config.Temperature,
-                top_p = _config.TopP
-            };
-
-            return await ExecuteRequestAsync(requestBody);
+            _chatHistories[instanceKey].RemoveAt(0);
         }
 
-        /// <summary>
-        /// Executes an HTTP request with retry logic.
-        /// </summary>
-        private async Task<string> ExecuteRequestAsync(object requestBody)
+        var requestBody = BuildChatRequestBody(_chatHistories[instanceKey]);
+        return await ExecuteRequestAsync(requestBody, forceChat: true);
+    }
+
+    public async Task<string> GenerateTextWithDynamicPromptAsync(DynamicPromptManager promptManager, string key, string userInput)
+    {
+        if (promptManager == null)
+            throw new ArgumentNullException(nameof(promptManager));
+
+        ValidateInput(key, nameof(key));
+        ValidateInput(userInput, nameof(userInput));
+
+        var predefinedPrompt = promptManager.GetPrompt(key);
+        ValidateInput(predefinedPrompt, nameof(predefinedPrompt));
+
+        return await GenerateTextAsync(predefinedPrompt + "\n" + userInput);
+    }
+
+    private async Task<string> ExecuteRequestAsync(object requestBody, bool? forceChat = null)
+    {
+        _httpClient.DefaultRequestHeaders.Clear();
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+        foreach (var header in _config.CustomHeaders)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-            foreach (var header in _config.CustomHeaders)
-            {
-                _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
-            }
+            _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+        }
 
-            var requestJson = JsonConvert.SerializeObject(requestBody);
-            if (_config.EnableLogging)
-            {
-                Console.WriteLine($"Request: {requestJson}");
-            }
+        var modelId = GetModelString();
+        bool isChat = forceChat ?? OpenAIModelHelper.IsChatModel(modelId);
+        string endpoint = isChat ? "/chat/completions" : "/completions";
 
-            var response = await ExecuteWithRetryAsync(() =>
-                _httpClient.PostAsync($"{BaseUrl}/chat/completions",
-                    new StringContent(requestJson, Encoding.UTF8, "application/json")));
+        var requestJson = JsonConvert.SerializeObject(requestBody);
+        if (_config.EnableLogging)
+        {
+            Console.WriteLine($"Request: {requestJson}");
+        }
 
-            if (_config.EnableLogging)
-            {
-                Console.WriteLine($"Response: {response}");
-            }
+        var response = await ExecuteWithRetryAsync(() =>
+            _httpClient.PostAsync($"{BaseUrl}{endpoint}",
+                new StringContent(requestJson, Encoding.UTF8, "application/json")));
 
-            var result = JsonConvert.DeserializeObject<dynamic>(response);
-            if (result?.choices?[0]?.message?.content == null)
-            {
-                throw new InvalidOperationException("Unexpected response format.");
-            }
+        if (_config.EnableLogging)
+        {
+            Console.WriteLine($"Response: {response}");
+        }
+
+        var result = JsonConvert.DeserializeObject<dynamic>(response);
+
+        if (result?.choices?[0]?.message?.content != null)
+        {
             return result.choices[0].message.content.ToString();
         }
-
-        /// <summary>
-        /// Executes a task with retry logic based on configuration settings.
-        /// </summary>
-        private async Task<string> ExecuteWithRetryAsync(Func<Task<HttpResponseMessage>> action)
+        else if (result?.choices?[0]?.text != null)
         {
-            for (int attempt = 0; attempt < _config.MaxRetryCount; attempt++)
+            return result.choices[0].text.ToString();
+        }
+        else
+        {
+            throw new InvalidOperationException("Unexpected response format.");
+        }
+    }
+
+    private async Task<string> ExecuteWithRetryAsync(Func<Task<HttpResponseMessage>> action)
+    {
+        for (int attempt = 0; attempt < _config.MaxRetryCount; attempt++)
+        {
+            try
             {
-                try
+                var response = await action();
+                if (response.IsSuccessStatusCode)
                 {
-                    var response = await action();
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return await response.Content.ReadAsStringAsync();
-                    }
-                    if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
-                    {
-                        throw new HttpRequestException($"Non-retriable error: {response.StatusCode}");
-                    }
+                    return await response.Content.ReadAsStringAsync();
                 }
-                catch (Exception ex) when (attempt < _config.MaxRetryCount - 1)
+                if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
                 {
-                    if (_config.EnableLogging)
-                    {
-                        Console.WriteLine($"Retry {attempt + 1}/{_config.MaxRetryCount} failed: {ex.Message}");
-                    }
-                    await Task.Delay(_config.RetryDelayMs);
+                    throw new HttpRequestException($"Non-retriable error: {response.StatusCode}");
                 }
             }
-            throw new Exception("Exceeded maximum retry attempts.");
+            catch (Exception ex) when (attempt < _config.MaxRetryCount - 1)
+            {
+                if (_config.EnableLogging)
+                {
+                    Console.WriteLine($"Retry {attempt + 1}/{_config.MaxRetryCount} failed: {ex.Message}");
+                }
+                await Task.Delay(_config.RetryDelayMs);
+            }
         }
+        throw new Exception("Exceeded maximum retry attempts.");
+    }
 
-        /// <summary>
-        /// Builds the API request body.
-        /// </summary>
-        private object BuildRequestBody(string prompt)
+    private object BuildRequestBody(string prompt)
+    {
+        var modelId = GetModelString();
+        bool isChat = OpenAIModelHelper.IsChatModel(modelId);
+        bool isOModel = modelId.StartsWith("o1") || modelId.StartsWith("o3") || modelId.StartsWith("o4");
+
+        if (isChat)
+        {
+            var baseChatRequest = new
+            {
+                model = modelId,
+                messages = new[] { new { role = "user", content = prompt } }
+            };
+
+            if (isOModel)
+            {
+                return new
+                {
+                    baseChatRequest.model,
+                    baseChatRequest.messages,
+                    max_completion_tokens = _config.MaxTokens
+                };
+            }
+            else
+            {
+                return new
+                {
+                    baseChatRequest.model,
+                    baseChatRequest.messages,
+                    max_tokens = _config.MaxTokens,
+                    temperature = _config.Temperature,
+                    top_p = _config.TopP
+                };
+            }
+        }
+        else
         {
             return new
             {
-                model = GetModelString(),
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
+                model = modelId,
+                prompt = prompt,
                 max_tokens = _config.MaxTokens,
                 temperature = _config.Temperature,
                 top_p = _config.TopP
             };
         }
+    }
 
-        /// <summary>
-        /// Validates input parameters.
-        /// </summary>
-        private static void ValidateInput(string input, string parameterName)
+    private object BuildChatRequestBody(List<object> messages)
+    {
+        var modelId = GetModelString();
+        bool isOModel = modelId.StartsWith("o1") || modelId.StartsWith("o3") || modelId.StartsWith("o4");
+
+        if (isOModel)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            return new
             {
-                throw new ArgumentException($"{parameterName} cannot be null or empty.", parameterName);
-            }
+                model = modelId,
+                messages = messages,
+                max_completion_tokens = _config.MaxTokens
+            };
+        }
+        else
+        {
+            return new
+            {
+                model = modelId,
+                messages = messages,
+                max_tokens = _config.MaxTokens,
+                temperature = _config.Temperature,
+                top_p = _config.TopP
+            };
+        }
+    }
+
+    private static void ValidateInput(string input, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            throw new ArgumentException($"{parameterName} cannot be null or empty.", parameterName);
         }
     }
 }

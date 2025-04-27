@@ -2,37 +2,41 @@
 using AIHelperLibrary.Prompts;
 using AIHelperLibrary.Models;
 using AIHelperLibrary.Configurations;
+using AIHelperLibrary.Abstractions;
 
 class Program
 {
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Welcome to the AI Helper Test Program!");
-        Console.Write("Enter your OpenAI API Key: ");
-        var apiKey = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(apiKey))
+        
+        // Choose provider
+        Console.WriteLine("Select AI Provider:");
+        Console.WriteLine("1. OpenAI");
+        Console.WriteLine("2. Anthropic (Claude)");
+        Console.Write("Enter your choice (1-2): ");
+        var providerChoice = Console.ReadLine();
+        IAIClient client;
+        
+        switch (providerChoice)
         {
-            Console.WriteLine("API Key cannot be null or empty. Exiting...");
+            case "1":
+                client = SetupOpenAIClient();
+                break;
+            case "2":
+                client = await SetupClaudeClient();
+                break;
+            default:
+                Console.WriteLine("Invalid choice. Defaulting to OpenAI.");
+                client = SetupOpenAIClient();
+                break;
+        }
+        
+        if (client == null)
+        {
+            Console.WriteLine("Failed to initialize AI client. Exiting...");
             return;
         }
-
-        // Set up configuration
-        var config = new AIExtensionHelperConfiguration
-        {
-            Language = Language.English,
-            DefaultModel = AIModel.GPT_4o_Mini,
-            MaxTokens = 150,
-            Temperature = 0.7,
-            TopP = 1.0,
-            RequestTimeoutMs = 10000,
-            Instructions = "You are an AI assistant.",
-            Tools = new() { "code_interpreter" },
-            MaxRetryCount = 3,
-            RetryDelayMs = 2000
-        };
-
-        var client = new OpenAIClient(apiKey, config);
 
         while (true)
         {
@@ -50,6 +54,58 @@ class Program
         }
     }
 
+    private static IAIClient SetupOpenAIClient()
+    {
+        Console.Write("Enter your OpenAI API Key: ");
+        var apiKey = Console.ReadLine();
+
+        // Set up OpenAI configuration
+        var config = new AIExtensionHelperConfiguration
+        {
+            Language = Language.English,
+            DefaultModel = AIModel.GPT_4o_Mini,
+            MaxTokens = 150,
+            Temperature = 0.7,
+            TopP = 1.0,
+            RequestTimeoutMs = 10000,
+            Instructions = "You are an AI assistant.",
+            Tools = new() { "code_interpreter" },
+            MaxRetryCount = 3,
+            RetryDelayMs = 2000
+        };
+
+        var factory = new AIProviderFactory();
+        return factory.CreateClient(apiKey, config);
+    }
+
+    private static async Task<IAIClient> SetupClaudeClient()
+    {
+        Console.Write("Enter your Anthropic API Key: ");
+        var apiKey = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            Console.WriteLine("API Key cannot be null or empty.");
+            return null;
+        }
+
+        // Set up Claude configuration
+        var config = new AnthropicConfiguration
+        {
+            DefaultModel = AnthropicModel.Claude3Sonnet,
+            MaxTokens = 150,
+            Temperature = 0.7,
+            TopP = 1.0,
+            RequestTimeoutMs = 10000,
+            SystemPrompt = "You are Claude, an AI assistant created by Anthropic.",
+            MaxRetryCount = 3,
+            RetryDelayMs = 2000
+        };
+        
+        var factory = new AIProviderFactory();
+        return factory.CreateClient(apiKey, config);
+    }
+
     private static void DisplayMenu()
     {
         Console.WriteLine("\n--- Main Menu ---");
@@ -61,7 +117,7 @@ class Program
         Console.Write("Enter your choice (1-4): ");
     }
 
-    private static async Task HandleUserChoice(string choice, OpenAIClient client)
+    private static async Task HandleUserChoice(string choice, IAIClient client)
     {
         try
         {
@@ -87,7 +143,7 @@ class Program
         }
     }
 
-    private static async Task TestCustomPrompt(OpenAIClient client)
+    private static async Task TestCustomPrompt(IAIClient client)
     {
         Console.WriteLine("\n--- Custom Prompt Test ---");
         Console.Write("Enter your custom prompt (e.g., 'Explain the benefits of using AI in education'): ");
@@ -111,7 +167,7 @@ class Program
         }
     }
 
-    private static async Task TestPredefinedPrompt(OpenAIClient client)
+    private static async Task TestPredefinedPrompt(IAIClient client)
     {
         Console.WriteLine("\n--- Predefined Prompt Test: Summarization ---");
         Console.Write("Enter the text you want to summarize: ");
@@ -135,7 +191,7 @@ class Program
         }
     }
 
-    private static async Task TestDynamicPrompt(OpenAIClient client)
+    private static async Task TestDynamicPrompt(IAIClient client)
     {
         Console.WriteLine("\n--- Dynamic Prompt Test ---");
         Console.Write("Enter a key (name) for your dynamic prompt (e.g., 'Greeting'): ");

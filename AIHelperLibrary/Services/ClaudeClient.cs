@@ -121,7 +121,6 @@ namespace AIHelperLibrary.Services
 
             return await ExecuteRequestAsync(requestBody);
         }
-
         /// <summary>
         /// Executes an HTTP request to the Claude API with retry logic.
         /// </summary>
@@ -130,7 +129,6 @@ namespace AIHelperLibrary.Services
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
             _httpClient.DefaultRequestHeaders.Add("anthropic-version", _config.ApiVersion);
-            _httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
 
             foreach (var header in _config.CustomHeaders)
             {
@@ -143,9 +141,10 @@ namespace AIHelperLibrary.Services
                 Console.WriteLine($"Request: {requestJson}");
             }
 
+            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
             var response = await ExecuteWithRetryAsync(() =>
-                _httpClient.PostAsync($"{BaseUrl}/messages",
-                    new StringContent(requestJson, Encoding.UTF8, "application/json")));
+                _httpClient.PostAsync($"{BaseUrl}/messages", content));
 
             if (_config.EnableLogging)
             {
@@ -158,17 +157,16 @@ namespace AIHelperLibrary.Services
                 throw new InvalidOperationException("Unexpected response format from Claude API.");
             }
 
-            // Extract text from the response
-            string content = string.Empty;
+            string responseContent = string.Empty;
             foreach (var block in result.content)
             {
                 if (block.type == "text")
                 {
-                    content += block.text.ToString();
+                    responseContent += block.text.ToString();
                 }
             }
 
-            return content;
+            return responseContent;
         }
 
         /// <summary>

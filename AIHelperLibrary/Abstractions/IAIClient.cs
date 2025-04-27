@@ -1,3 +1,5 @@
+using AIHelperLibrary.Prompts;
+
 namespace AIHelperLibrary.Abstractions
 {
     /// <summary>
@@ -28,5 +30,14 @@ namespace AIHelperLibrary.Abstractions
         /// <param name="initialPrompt">The system's initial prompt for context.</param>
         /// <returns>The AI-generated response as a string.</returns>
         Task<string> GenerateChatResponseAsync(string instanceKey, string userMessage, string initialPrompt);
+        
+        /// <summary>
+        /// Generates a response using a dynamic prompt managed by a prompt manager.
+        /// </summary>
+        /// <param name="promptManager">The dynamic prompt manager.</param>
+        /// <param name="key">The key identifying the specific prompt template.</param>
+        /// <param name="userInput">The user input to incorporate with the prompt.</param>
+        /// <returns>The AI-generated response as a string.</returns>
+        Task<string> GenerateTextWithDynamicPromptAsync(DynamicPromptManager promptManager, string key, string userInput);
     }
 }

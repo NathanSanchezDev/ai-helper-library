@@ -23,7 +23,7 @@ namespace AIHelperLibrary.Configurations
         /// Supported values are defined in the AIModel enumeration.
         /// Default is GPT-3.5-Turbo.
         /// </summary>
-        public AIModel DefaultModel { get; set; } = AIModel.GPT_3_5_Turbo;
+        public OpenAIModel DefaultModel { get; set; } = OpenAIModel.GPT_3_5_Turbo;
 
         /// <summary>
         /// Top-p sampling controls the diversity of responses.

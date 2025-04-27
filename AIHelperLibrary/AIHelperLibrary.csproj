@@ -3,11 +3,11 @@
   <PropertyGroup>
     <!-- NuGet Metadata -->
     <PackageId>AIHelperLibrary</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>Nathan Sanchez</Authors>
-    <Description>A modular library for interacting with OpenAI's API, including dynamic prompts, chatbot sessions, and robust configuration options.</Description>
+    <Description>A modular C# library for interacting with OpenAI and Anthropic APIs, supporting dynamic prompts, chatbot sessions, and multi-provider configuration.</Description>
     <RepositoryUrl>https://github.com/NathanSanchezDev/ai-helper-library</RepositoryUrl>
-    <PackageTags>AI OpenAI GPT C# MachineLearning</PackageTags>
+    <PackageTags>AI OpenAI Anthropic GPT Claude C# MachineLearning</PackageTags>
     <LicenseUrl>https://opensource.org/licenses/MIT</LicenseUrl>
     <ProjectUrl>https://github.com/NathanSanchezDev/ai-helper-library</ProjectUrl>
     <Copyright>Copyright © 2025 Nathan Sanchez</Copyright>

@@ -12,12 +12,12 @@ namespace AIHelperLibrary.Services;
 public class OpenAIClient : IAIClient
 {
     private readonly string _apiKey;
-    private readonly AIExtensionHelperConfiguration _config;
+    private readonly OpenAIConfiguration _config;
     private readonly HttpClient _httpClient;
     private const string BaseUrl = "https://api.openai.com/v1";
     private readonly Dictionary<string, List<object>> _chatHistories = new();
 
-    public OpenAIClient(string apiKey, AIExtensionHelperConfiguration config)
+    public OpenAIClient(string apiKey, OpenAIConfiguration config)
     {
         _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         _config = config ?? throw new ArgumentNullException(nameof(config));

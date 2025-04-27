@@ -26,7 +26,7 @@ namespace AIHelperLibrary.Services
             return config.Provider switch
             {
                 Models.AIProvider.OpenAI => 
-                    new OpenAIClient(apiKey, config as AIExtensionHelperConfiguration ?? 
+                    new OpenAIClient(apiKey, config as OpenAIConfiguration ?? 
                         throw new ArgumentException("Invalid configuration type for OpenAI provider.")),
                         
                 Models.AIProvider.Anthropic => 

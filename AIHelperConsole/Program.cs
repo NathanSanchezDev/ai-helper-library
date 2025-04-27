@@ -179,7 +179,7 @@ class Program
         var model = options[choice - 1].Model;
 
         // ── Build configuration ─────────────────────────────────────────────────
-        var config = new AIExtensionHelperConfiguration
+        var config = new OpenAIConfiguration
         {
             Language = Language.English,
             DefaultModel = model,

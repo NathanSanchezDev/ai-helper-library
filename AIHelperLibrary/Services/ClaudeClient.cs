@@ -106,7 +106,7 @@ namespace AIHelperLibrary.Services
         /// <summary>
         /// Executes a request to the Claude API with messages format.
         /// </summary>
-        private async Task<string> ExecuteMessagesRequestAsync(List<object> messages, string systemPrompt = null)
+        private async Task<string> ExecuteMessagesRequestAsync(List<object> messages, string? systemPrompt = null)
         {
             var requestBody = new
             {

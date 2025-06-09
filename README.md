@@ -2,6 +2,7 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c032030d-6e27-4517-a499-2b50570d3ae7" alt="AI Helper Library Logo" width="250"/>
 </p>
+
 The **AI Helper Library** is a modern, modular, and provider-agnostic C# SDK for interacting with today's leading AI services — including OpenAI (GPT models) and Anthropic (Claude models).  
 It provides robust tools for dynamic prompts, chat histories, retry handling, multi-provider configuration, and powerful customization — designed for **production-grade** .NET apps.
 

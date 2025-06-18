@@ -13,7 +13,7 @@
     <Copyright>Copyright © 2025 Nathan Sanchez</Copyright>
 
     <!-- Framework and Features -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
